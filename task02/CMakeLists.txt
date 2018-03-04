@@ -3,4 +3,4 @@ project(task02 C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(task02 main.c stack.h queue.h input_parser.c input_parser.h vector.h)
+add_executable(task02 main.c stack.h queue.h input_parser.c input_parser.h vector.h vector.c)

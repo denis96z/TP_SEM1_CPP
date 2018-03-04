@@ -1,3 +1,2 @@
-!*.[hc]
-!Makefile
-!CMakeLists.txt
+.idea
+cmake-build-debug

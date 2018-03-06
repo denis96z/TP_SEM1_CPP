@@ -60,10 +60,6 @@ parsing_error_t parse_expression(queue_t *expression, vector_t lexems) {
 
             while (stack.numItems) {
                 topStackLexem = peek(&stack);
-                if (topStackLexem.type != OPERATOR) {
-                    break;
-                }
-
                 int topStackLexemPriority = get_priority(&topStackLexem);
 
                 if ((currentLexemAssociativity == RIGHT &&
@@ -127,5 +123,8 @@ int get_priority(const lexem_t *operator) {
 
         case '+': case '-':
             return 1;
+
+        case '(': case ')':
+            return 0;
     }
 }

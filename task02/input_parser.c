@@ -98,7 +98,13 @@ parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const 
             }
             else if (c == ')') {
                 *parserState = CLOSING_BRACKET_STATE;
-                result = add_bracket_to_vector(lexems, c);
+                if (constantLength) {
+                    result = add_constant_to_vector(lexems, constant, constantLength);
+                    constantLength = 0;
+                }
+                if (result == NO_ERROR) {
+                    result = add_bracket_to_vector(lexems, c);
+                }
             }
             else if (is_splitter(c)) {
                 if (constantLength) {
@@ -137,7 +143,13 @@ parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const 
             }
             else if (c == ')') {
                 *parserState = CLOSING_BRACKET_STATE;
-                result = add_bracket_to_vector(lexems, c);
+                if (constantLength) {
+                    result = add_constant_to_vector(lexems, constant, constantLength);
+                    constantLength = 0;
+                }
+                if (result == NO_ERROR) {
+                    result = add_bracket_to_vector(lexems, c);
+                }
             }
             else if (is_splitter(c)) {
                 if (constantLength) {
@@ -168,7 +180,7 @@ parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const 
             }
             break;
 
-            //Not sure bracket will be here, but for now it works
+        //Not sure opening bracket will be here, but for now it works
         case BIN_OPERATOR_STATE: case OPENING_BRACKET_STATE:
             if (is_digit(c)) {
                 *parserState = CONST_INT_PART_STATE;
@@ -255,6 +267,7 @@ parsing_error_t add_constant_to_vector(vector_t *lexems, const char *constant, s
 
 parsing_error_t add_bracket_to_vector(vector_t *lexems, char bracket) {
     lexem_t lexem;
+    lexem.value.operator = bracket;
 
     switch (bracket) {
         case '(':

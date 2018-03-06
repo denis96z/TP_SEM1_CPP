@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "input_parser.h"
-#include "vector.h"
+#include "expression_parser.h"
 
 char* read_expression(void);
 char* realloc_buffer(char *buffer, size_t currentSize, size_t newSize);
@@ -23,16 +23,12 @@ int main() {
         return 0;
     }
 
-    for (size_t i = 0; i < lexems.numItems; ++i) {
-        lexem_t it;
-        get_from_vector(&it, &lexems, i);
-
-        if (it.type == CONSTANT) {
-            printf("Const: %.2lf\n", it.value.constant);
-        }
-        else {
-            printf("Operator: %c\n", it.value.operator);
-        }
+    queue_t expressionQueue;
+    if (parse_expression(&expressionQueue, lexems) != NO_ERROR) {
+        free_buffer(expression);
+        clear_vector(&lexems);
+        PRINT_ERROR;
+        return 0;
     }
 
     clear_vector(&lexems);

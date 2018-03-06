@@ -110,6 +110,9 @@ associativity_t get_associativity(const lexem_t *operator) {
 
         case '#': case '$':
             return LEFT;
+
+        default:
+            return (associativity_t)-1;
     }
 }
 
@@ -126,5 +129,8 @@ int get_priority(const lexem_t *operator) {
 
         case '(': case ')':
             return 0;
+
+        default:
+            return -1;
     }
 }

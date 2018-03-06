@@ -83,6 +83,7 @@ int perform_bin_operation(stack_t *stack, bin_operation_t operation) {
     if (!push(stack, result)) {
         return 0;
     }
+    return 1;
 }
 
 int perform_un_operation(stack_t *stack, un_operation_t operation) {
@@ -94,6 +95,7 @@ int perform_un_operation(stack_t *stack, un_operation_t operation) {
     if (!push(stack, result)) {
         return 0;
     }
+    return 1;
 }
 
 double add(double firstConst, double secondConst) {

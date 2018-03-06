@@ -3,6 +3,7 @@
 
 #include "input_parser.h"
 #include "expression_parser.h"
+#include "calculator.h"
 
 char* read_expression(void);
 char* realloc_buffer(char *buffer, size_t currentSize, size_t newSize);
@@ -31,6 +32,15 @@ int main() {
         return 0;
     }
 
+    double result = 0;
+    if (calculate(&expressionQueue, &result)) {
+        printf("%.2lf", result);
+    }
+    else {
+        PRINT_ERROR;
+    }
+
+    clear_queue(&expressionQueue);
     clear_vector(&lexems);
     free_buffer(expression);
 

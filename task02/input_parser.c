@@ -196,6 +196,9 @@ parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const 
                 *parserState = BIN_OPERATOR_STATE;
                 result = add_operator_to_vector(lexems, c);
             }
+            else if (c == ')') {
+                result = add_bracket_to_vector(lexems, c);
+            }
             else if (is_splitter(c)) {
                 //Ignore splitter
             }

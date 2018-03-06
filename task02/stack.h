@@ -66,7 +66,7 @@ static inline stack_data_type_t peek(const stack_t *stack) {
     return stack->top->data;
 }
 
-int try_peek(const stack_t *stack, stack_data_type_t *item) {
+static inline int try_peek(const stack_t *stack, stack_data_type_t *item) {
     if (stack->top) {
         *item = stack->top->data;
         return 1;

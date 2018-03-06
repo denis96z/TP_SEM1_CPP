@@ -17,12 +17,12 @@ typedef struct queue {
     size_t numItems;
 } queue_t;
 
-void init_queue(queue_t *queue) {
+static inline void init_queue(queue_t *queue) {
     queue->head = queue->tail = NULL;
     queue->numItems = 0;
 }
 
-int enqueue(queue_t *queue, queue_data_type_t item) {
+static inline int enqueue(queue_t *queue, queue_data_type_t item) {
     queue_node_t *newNode = (queue_node_t*)malloc(sizeof(queue_node_t));
     if (!newNode) {
         return 0;
@@ -43,7 +43,7 @@ int enqueue(queue_t *queue, queue_data_type_t item) {
     return 1;
 }
 
-queue_data_type_t dequeue(queue_t *queue) {
+static inline queue_data_type_t dequeue(queue_t *queue) {
     assert(queue->head);
 
     queue_node_t *tempNode = queue->head;
@@ -59,12 +59,12 @@ queue_data_type_t dequeue(queue_t *queue) {
     return item;
 }
 
-queue_data_type_t top(const queue_t *queue) {
+static inline queue_data_type_t top(const queue_t *queue) {
     assert(queue->head);
     return queue->head->data;
 }
 
-void clear_queue(queue_t *queue) {
+static inline void clear_queue(queue_t *queue) {
     while (queue->head) {
         queue_node_t *tempNode = queue->head;
         queue->head = tempNode->next;

@@ -16,12 +16,12 @@ typedef struct stack {
     size_t numItems;
 } stack_t;
 
-void init_stack(stack_t *stack) {
+static inline void init_stack(stack_t *stack) {
     stack->top = NULL;
     stack->numItems = 0;
 }
 
-int push(stack_t *stack, stack_data_type_t item) {
+static inline int push(stack_t *stack, stack_data_type_t item) {
     stack_node_t *newNode = (stack_node_t*)malloc(sizeof(stack_node_t));
     if (!newNode) {
         return 0;
@@ -35,7 +35,7 @@ int push(stack_t *stack, stack_data_type_t item) {
     return 1;
 }
 
-stack_data_type_t pop(stack_t *stack) {
+static inline stack_data_type_t pop(stack_t *stack) {
     assert(stack->top);
 
     stack_node_t *tempNode = stack->top;
@@ -47,7 +47,7 @@ stack_data_type_t pop(stack_t *stack) {
     return item;
 }
 
-int try_pop(stack_t *stack, stack_data_type_t *item) {
+static inline int try_pop(stack_t *stack, stack_data_type_t *item) {
     if (stack->top) {
         return 0;
     }
@@ -61,7 +61,7 @@ int try_pop(stack_t *stack, stack_data_type_t *item) {
     return 1;
 }
 
-stack_data_type_t peek(const stack_t *stack) {
+static inline stack_data_type_t peek(const stack_t *stack) {
     assert(stack->top);
     return stack->top->data;
 }
@@ -74,7 +74,7 @@ int try_peek(const stack_t *stack, stack_data_type_t *item) {
     return 0;
 }
 
-void clear_stack(stack_t *stack) {
+static inline void clear_stack(stack_t *stack) {
     while (stack->top) {
         stack_node_t *tempNode = stack->top;
         stack->top = tempNode->next;

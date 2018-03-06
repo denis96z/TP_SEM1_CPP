@@ -22,7 +22,8 @@ typedef struct {
 typedef enum {
     NO_ERROR = 0,
     OUT_OF_MEMORY = 1 << 0,
-    ILLEGAL_SYMBOL = 1 << 1
+    ILLEGAL_SYMBOL = 1 << 1,
+    BRACKETS_DISBALANCE = 1 << 2
 } parsing_error_t;
 
 parsing_error_t parse_input(vector_t *lexems, const char *input);

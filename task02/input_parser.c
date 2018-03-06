@@ -2,28 +2,33 @@
 #include <string.h>
 
 typedef enum {
-    INITIAL,
-    UN_OPERATION,
-    BIN_OPERATION,
-    CONST_INT_PART,
-    POINT,
-    CONST_REAL_PART,
-    FINAL
+    INITIAL_STATE,
+    UN_OPERATOR_STATE,
+    BIN_OPERATOR_STATE,
+    CONST_INT_PART_STATE,
+    POINT_STATE,
+    CONST_REAL_PART_STATE,
+    OPENING_BRACKET_STATE,
+    CLOSING_BRACKET_STATE,
+    FINAL_STATE
 } parser_state_t;
 
 int is_digit(char c);
 int is_un_operator(char c);
 int is_bin_operator(char c);
+int is_splitter(char c);
 
 parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const char *input);
+
 parsing_error_t add_operator_to_vector(vector_t *lexems, char operator);
 parsing_error_t add_unary_operator_to_vector(vector_t *lexems, char operator);
 parsing_error_t add_constant_to_vector(vector_t *lexems, const char *constant, size_t constantLength);
+parsing_error_t add_bracket_to_vector(vector_t *lexems, char bracket);
 
 parsing_error_t parse_input(vector_t *lexems, const char *input) {
     init_vector(lexems, lexem_t);
 
-    parser_state_t parserState = INITIAL;
+    parser_state_t parserState = INITIAL_STATE;
     while (*input) {
         parsing_error_t result = parse_char(lexems, &parserState, input);
         if (result != NO_ERROR) {
@@ -33,7 +38,7 @@ parsing_error_t parse_input(vector_t *lexems, const char *input) {
         ++input;
     }
 
-    parserState = FINAL;
+    parserState = FINAL_STATE;
     parsing_error_t result = parse_char(lexems, &parserState, input);
     if (result != NO_ERROR) {
         clear_vector(lexems);
@@ -48,140 +53,175 @@ parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const 
     static size_t constantLength = 0;
 
     char c = *input;
-    switch (*parserState) {
-        case INITIAL:
-            if (constantLength) {
-                parsing_error_t result = add_constant_to_vector(lexems,
-                    constant, constantLength) & add_operator_to_vector(lexems, c);
-                constantLength = 0;
-                if (result != NO_ERROR) {
-                    return result;
-                }
-            }
+    parsing_error_t result = NO_ERROR;
 
-            if (c == '(') {
-                return add_operator_to_vector(lexems, '(');
+    switch (*parserState) {
+        case INITIAL_STATE:
+            if (is_digit(c)) {
+                *parserState = CONST_INT_PART_STATE;
+                constant = input;
+                constantLength = 1;
             }
             else if (is_un_operator(c)) {
-                *parserState = UN_OPERATION;
-                return add_unary_operator_to_vector(lexems, c);
+                *parserState = UN_OPERATOR_STATE;
+                result = add_unary_operator_to_vector(lexems, c);
             }
-            else if (is_digit(c)) {
-                *parserState = CONST_INT_PART;
-                constant = input;
-                constantLength = 1;
+            else if (c == '(') {
+                *parserState = OPENING_BRACKET;
+                result = add_bracket_to_vector(lexems, c);
             }
-            else if (c == ' ') {
-                //Ignore spaces
+            else if (is_splitter(c)) {
+                //Ignore splitter.
             }
             else {
-                return ILLEGAL_SYMBOL;
+                result = ILLEGAL_SYMBOL;
             }
             break;
 
-        case UN_OPERATION:
-            if (c == '(') {
-                return add_operator_to_vector(lexems, '(');
-            }
-            else if (is_digit(c)) {
-                *parserState = CONST_INT_PART;
-                constant = input;
-                constantLength = 1;
-            }
-            else {
-                return ILLEGAL_SYMBOL;
-            }
-            break;
-
-        case CONST_INT_PART:
+        case CONST_INT_PART_STATE:
             if (is_digit(c)) {
                 ++constantLength;
             }
             else if (c == '.') {
-                *parserState = POINT;
+                *parserState = POINT_STATE;
                 ++constantLength;
             }
             else if (is_bin_operator(c)) {
-                *parserState = BIN_OPERATION;
-                parsing_error_t result = add_constant_to_vector(lexems,
-                    constant, constantLength) & add_operator_to_vector(lexems, c);
-                constantLength = 0;
-                return result;
-            }
-            else {
-                return ILLEGAL_SYMBOL;
-            }
-            break;
-
-        case POINT:
-            if (is_digit(c)) {
-                *parserState = CONST_REAL_PART;
-                ++constantLength;
-            }
-            else {
-                return ILLEGAL_SYMBOL;
-            }
-            break;
-
-        case CONST_REAL_PART:
-            if (is_digit(c)) {
-                ++constantLength;
-            }
-            else if (is_bin_operator(c)) {
-                *parserState = BIN_OPERATION;
-                parsing_error_t result = add_constant_to_vector(lexems,
-                    constant, constantLength) & add_operator_to_vector(lexems, c);
-                constantLength = 0;
-                return result;
+                *parserState = BIN_OPERATOR_STATE;
+                if (constantLength) {
+                    result = add_constant_to_vector(lexems, constant, constantLength);
+                    constantLength = 0;
+                }
+                if (result == NO_ERROR) {
+                    result = add_operator_to_vector(lexems, c);
+                }
             }
             else if (c == ')') {
-                *parserState = INITIAL;
-                return add_operator_to_vector(lexems, ')');
+                *parserState = CLOSING_BRACKET_STATE;
+                result = add_bracket_to_vector(lexems, c);
             }
-            else if (c == ' ') {
-                *parserState = INITIAL;
+            else if (is_splitter(c)) {
+                if (constantLength) {
+                    result = add_constant_to_vector(lexems, constant, constantLength);
+                    constantLength = 0;
+                }
             }
             else {
-                return ILLEGAL_SYMBOL;
+                result = ILLEGAL_SYMBOL;
             }
             break;
 
-        case BIN_OPERATION:
+        case POINT_STATE:
             if (is_digit(c)) {
-                *parserState = CONST_INT_PART;
+                *parserState = CONST_REAL_PART_STATE;
+                ++constantLength;
+            }
+            else {
+                result = ILLEGAL_SYMBOL;
+            }
+            break;
+
+        case CONST_REAL_PART_STATE:
+            if (is_digit(c)) {
+                ++constantLength;
+            }
+            else if (is_bin_operator(c)) {
+                *parserState = BIN_OPERATOR_STATE;
+                if (constantLength) {
+                    result = add_constant_to_vector(lexems, constant, constantLength);
+                    constantLength = 0;
+                }
+                if (result == NO_ERROR) {
+                    result = add_operator_to_vector(lexems, c);
+                }
+            }
+            else if (c == ')') {
+                *parserState = CLOSING_BRACKET_STATE;
+                result = add_bracket_to_vector(lexems, c);
+            }
+            else if (is_splitter(c)) {
+                if (constantLength) {
+                    result = add_constant_to_vector(lexems, constant, constantLength);
+                    constantLength = 0;
+                }
+            }
+            else {
+                result = ILLEGAL_SYMBOL;
+            }
+            break;
+
+        case UN_OPERATOR_STATE:
+            if (is_digit(c)) {
+                *parserState = CONST_INT_PART_STATE;
+                constant = input;
+                constantLength = 1;
+            }
+            else if (c == '(') {
+                *parserState = OPENING_BRACKET_STATE;
+                result = add_bracket_to_vector(lexems, c);
+            }
+            else if (is_splitter(c)) {
+                //Ignore splitter
+            }
+            else {
+                result = ILLEGAL_SYMBOL;
+            }
+            break;
+
+            //Not sure bracket will be here, but for now it works
+        case BIN_OPERATOR_STATE: case OPENING_BRACKET_STATE:
+            if (is_digit(c)) {
+                *parserState = CONST_INT_PART_STATE;
                 constant = input;
                 constantLength = 1;
             }
             else if (is_un_operator(c)) {
-                *parserState = UN_OPERATION;
-                return add_unary_operator_to_vector(lexems, c);
+                *parserState = UN_OPERATOR_STATE;
+                result = add_unary_operator_to_vector(lexems, c);
             }
             else if (c == '(') {
-                *parserState = INITIAL;
-                return add_operator_to_vector(lexems, '(');
+                *parserState = OPENING_BRACKET_STATE;
+                result = add_bracket_to_vector(lexems, c);
             }
-            else if (c == ' ') {
-                *parserState = INITIAL;
+            else if (is_splitter(c)) {
+                //Ignore splitter
             }
             else {
-                return ILLEGAL_SYMBOL;
+                result = ILLEGAL_SYMBOL;
             }
             break;
 
-        case FINAL:
-            if (constantLength) {
-                return add_constant_to_vector(lexems, constant, constantLength);
+        case CLOSING_BRACKET_STATE:
+            if (is_bin_operator(c)) {
+                *parserState = BIN_OPERATOR_STATE;
+                result = add_operator_to_vector(lexems, c);
             }
+            else if (is_splitter(c)) {
+                //Ignore splitter
+            }
+            else {
+                result = ILLEGAL_SYMBOL;
+            }
+            break;
+
+        case FINAL_STATE:
+            if (constantLength) {
+                result = add_constant_to_vector(lexems, constant, constantLength);
+            }
+            break;
     }
 
-    return NO_ERROR;
+    return result;
 }
+
+#define try_add_to_vector(vectorPtr, lexemPtr) \
+    add_to_vector((vectorPtr), (lexemPtr)) ? NO_ERROR : OUT_OF_MEMORY
 
 parsing_error_t add_operator_to_vector(vector_t *lexems, char operator) {
     lexem_t lexem;
     lexem.type = OPERATOR;
     lexem.value.operator = operator;
-    return add_to_vector(lexems, &lexem) ? NO_ERROR : OUT_OF_MEMORY;
+    return try_add_to_vector(lexems, &lexem);
 }
 
 parsing_error_t add_unary_operator_to_vector(vector_t *lexems, char operator) {
@@ -207,7 +247,27 @@ parsing_error_t add_constant_to_vector(vector_t *lexems, const char *constant, s
     lexem.type = CONSTANT;
     lexem.value.constant = atof(buffer);
 
-    return add_to_vector(lexems, &lexem) ? NO_ERROR : OUT_OF_MEMORY;
+    return try_add_to_vector(lexems, &lexem);
+}
+
+parsing_error_t add_bracket_to_vector(vector_t *lexems, char bracket) {
+    lexem_t lexem;
+
+    switch (bracket) {
+        case '(':
+            lexem.type = OPENING_BRACKET;
+            break;
+
+        case ')':
+            lexem.type = CLOSING_BRACKET;
+            break;
+
+        //Normally this will not happen:
+        default:
+            return ILLEGAL_SYMBOL;
+    }
+
+    return try_add_to_vector(lexems, &lexem);
 }
 
 int is_digit(char c) {
@@ -220,4 +280,8 @@ int is_un_operator(char c) {
 
 int is_bin_operator(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/';
+}
+
+int is_splitter(char c) {
+    return c == ' ';
 }

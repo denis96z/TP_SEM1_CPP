@@ -6,7 +6,9 @@
 
 typedef enum {
     OPERATOR,
-    CONSTANT
+    CONSTANT,
+    OPENING_BRACKET,
+    CLOSING_BRACKET
 } lexem_type_t;
 
 typedef struct {

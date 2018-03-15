@@ -70,9 +70,6 @@ int apply_operator(stack_t *stack, const lexem_t *operator) {
     }
 }
 
-typedef double (*bin_operation_t)(double, double);
-typedef double (*un_operation_t)(double);
-
 int perform_bin_operation(stack_t *stack, bin_operation_t operation) {
     double firstConst = pop(stack).value.constant;
     double secondConst = pop(stack).value.constant;

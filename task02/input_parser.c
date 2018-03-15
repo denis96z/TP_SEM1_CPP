@@ -67,7 +67,7 @@ parsing_error_t parse_char(vector_t *lexems, parser_state_t *parserState, const 
                 result = add_unary_operator_to_vector(lexems, c);
             }
             else if (c == '(') {
-                *parserState = OPENING_BRACKET;
+                *parserState = OPENING_BRACKET_STATE;
                 result = add_bracket_to_vector(lexems, c);
             }
             else if (is_splitter(c)) {
